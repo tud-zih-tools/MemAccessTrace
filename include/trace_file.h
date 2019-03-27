@@ -50,7 +50,7 @@ class TraceFile
         {
         }
 
-        TraceMetaData (const EventBuffer& event_buffer)
+        explicit TraceMetaData (const EventBuffer& event_buffer)
         : access_count (event_buffer.size ()), tid (convert_thread_id (event_buffer.tid))
         {
         }
