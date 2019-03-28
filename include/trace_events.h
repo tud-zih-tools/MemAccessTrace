@@ -98,16 +98,29 @@ operator<< (std::ostream& os, const AccessEvent& me);
 struct EventBuffer
 {
     inline uint64_t
+    add_count () const
+    {
+        return add_count ();
+    }
+
+    inline uint64_t
     access_count () const
     {
-        return number_of_accesses_;
+        return data_.size ();
     }
 
     inline void
     add (uint64_t timestamp, uint64_t address, uint64_t instruction_pointer, AccessType type, MemoryLevel level)
     {
-        number_of_accesses_++;
+        add_count_++;
         data_.push_back (AccessEvent (timestamp, address, instruction_pointer, type, level));
+    }
+
+    inline void
+    add (const AccessEvent& event)
+    {
+        add_count_++;
+        data_.push_back (event);
     }
 
     inline std::forward_list<PointerSizePair>
@@ -139,7 +152,7 @@ struct EventBuffer
     inline size_t
     capacity () const
     {
-        return data_.capacity();
+        return data_.capacity ();
     }
 
     explicit EventBuffer (std::size_t size) : data_ (size)
@@ -148,7 +161,7 @@ struct EventBuffer
 
     private:
     boost::circular_buffer<AccessEvent> data_;
-    uint64_t number_of_accesses_ = 0;
+    uint64_t add_count_ = 0;
 };
 
 inline std::ostream&
