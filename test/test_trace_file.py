@@ -22,7 +22,7 @@ class TestEventBuffer(unittest.TestCase):
         buffer = tf.EventBuffer(100)
         self.assertEqual(len(buffer), 0)
         self.assertEqual(buffer.capacity(), 100)
-        buffer.append(1, 1, 1, tf.AccessType.LOAD, tf.MemoryLevel.MEM_LVL_HIT)
+        buffer.append(tf.AccessEvent(1, 1, 1, tf.AccessType.LOAD, tf.MemoryLevel.MEM_LVL_HIT))
         self.assertEqual(len(buffer), 1)
         self.assertEqual(buffer.capacity(), 100)
 

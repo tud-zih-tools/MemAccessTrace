@@ -59,7 +59,8 @@ PYBIND11_MODULE (tracefile, m)
     py::class_<EventBuffer> (m, "EventBuffer")
     .def (py::init<std::size_t> ())
     .def ("capacity", &EventBuffer::capacity)
-    .def ("append", &EventBuffer::add)
+    .def ("append", py::overload_cast<uint64_t, uint64_t, uint64_t, AccessType, MemoryLevel> (&EventBuffer::add))
+    .def ("append", py::overload_cast<const AccessEvent&> (&EventBuffer::add))
     .def ("__len__", &EventBuffer::access_count)
     .def ("__iter__", [](EventBuffer& eb) { return py::make_iterator (eb.begin (), eb.end ()); },
           py::keep_alive<0, 1> ());
