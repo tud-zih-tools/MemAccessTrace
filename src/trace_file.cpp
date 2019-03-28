@@ -61,9 +61,9 @@ TraceFile::read ()
     TraceMetaData md;
     read_meta_data (&md);
 
-    AccessSequence as (md.access_count());
-    // TODO meta_data as parameter
-    read_raw_data (reinterpret_cast<char*> (as.data ()), sizeof (AccessEvent) * md.access_count());
+    AccessSequence as (md.access_count ());
+
+    read_raw_data (reinterpret_cast<char*> (as.data ()), sizeof (AccessEvent) * md.access_count ());
     return as;
 }
 

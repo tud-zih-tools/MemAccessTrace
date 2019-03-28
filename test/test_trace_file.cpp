@@ -27,10 +27,10 @@ TEST_CASE ("tracefile::metadata::rw")
     const char* p = "./foo";
 
     auto tid = std::this_thread::get_id ();
-    EventBuffer eb(42);
+    EventBuffer eb (42);
 
     TraceMetaData md_read;
-    TraceMetaData md_write(eb, tid);
+    TraceMetaData md_write (eb, tid);
     {
         TraceFile tf (p, TraceFileMode::WRITE);
         tf.write_meta_data (md_write);
@@ -39,8 +39,8 @@ TEST_CASE ("tracefile::metadata::rw")
         TraceFile tf (p, TraceFileMode::READ);
         tf.read_meta_data (&md_read);
     }
-    REQUIRE (md_write.thread_id() == md_read.thread_id());
-    REQUIRE (md_write.access_count() == md_read.access_count());
+    REQUIRE (md_write.thread_id () == md_read.thread_id ());
+    REQUIRE (md_write.access_count () == md_read.access_count ());
     REQUIRE (bf::remove (p));
 }
 
@@ -57,7 +57,7 @@ TEST_CASE ("tracefile::simple")
 
     {
         TraceFile tf (p, TraceFileMode::WRITE);
-        tf.write (eb, TraceMetaData(eb, tid));
+        tf.write (eb, TraceMetaData (eb, tid));
     }
 
     TraceFile tf (p, TraceFileMode::READ);

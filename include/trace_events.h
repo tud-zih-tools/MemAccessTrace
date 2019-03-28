@@ -23,15 +23,20 @@ enum class AccessType : uint32_t
 };
 
 inline std::string
-toString(AccessType a)
+toString (AccessType a)
 {
-    switch(a)
+    switch (a)
     {
-        case AccessType::LOAD: return "Load";
-        case AccessType::STORE: return "Store";
-        case AccessType::PREFETCH: return "Prefetch";
-        case AccessType::EXEC: return "Exec";
-        case AccessType::NA: return "N/A";
+    case AccessType::LOAD:
+        return "Load";
+    case AccessType::STORE:
+        return "Store";
+    case AccessType::PREFETCH:
+        return "Prefetch";
+    case AccessType::EXEC:
+        return "Exec";
+    case AccessType::NA:
+        return "N/A";
     }
     return "Unsupported type";
 }
@@ -55,24 +60,38 @@ enum class MemoryLevel : uint32_t
 };
 
 inline std::string
-toString(MemoryLevel ml)
+toString (MemoryLevel ml)
 {
-    switch(ml)
+    switch (ml)
     {
-        case MemoryLevel::MEM_LVL_NA: return "N/A";
-        case MemoryLevel::MEM_LVL_HIT: return "Hit";
-        case MemoryLevel::MEM_LVL_MISS: return "Miss";
-        case MemoryLevel::MEM_LVL_L1: return "L1";
-        case MemoryLevel::MEM_LVL_L2: return "L2";
-        case MemoryLevel::MEM_LVL_L3: return "L3";
-        case MemoryLevel::MEM_LVL_LFB: return "Line Fill Buffer";
-        case MemoryLevel::MEM_LVL_LOC_RAM: return "Local DRAM";
-        case MemoryLevel::MEM_LVL_REM_RAM1: return "REM DRAM 1 hop";
-        case MemoryLevel::MEM_LVL_REM_RAM2: return "REM DRAM 2 hops";
-        case MemoryLevel::MEM_LVL_REM_CCE1: return "Remote cache 1 hop";
-        case MemoryLevel::MEM_LVL_REM_CCE2: return "Remote cache 2 hops";
-        case MemoryLevel::MEM_LVL_IO: return "I/O memory";
-        case MemoryLevel::MEM_LVL_UNC: return "Uncached memory";
+    case MemoryLevel::MEM_LVL_NA:
+        return "N/A";
+    case MemoryLevel::MEM_LVL_HIT:
+        return "Hit";
+    case MemoryLevel::MEM_LVL_MISS:
+        return "Miss";
+    case MemoryLevel::MEM_LVL_L1:
+        return "L1";
+    case MemoryLevel::MEM_LVL_L2:
+        return "L2";
+    case MemoryLevel::MEM_LVL_L3:
+        return "L3";
+    case MemoryLevel::MEM_LVL_LFB:
+        return "Line Fill Buffer";
+    case MemoryLevel::MEM_LVL_LOC_RAM:
+        return "Local DRAM";
+    case MemoryLevel::MEM_LVL_REM_RAM1:
+        return "REM DRAM 1 hop";
+    case MemoryLevel::MEM_LVL_REM_RAM2:
+        return "REM DRAM 2 hops";
+    case MemoryLevel::MEM_LVL_REM_CCE1:
+        return "Remote cache 1 hop";
+    case MemoryLevel::MEM_LVL_REM_CCE2:
+        return "Remote cache 2 hops";
+    case MemoryLevel::MEM_LVL_IO:
+        return "I/O memory";
+    case MemoryLevel::MEM_LVL_UNC:
+        return "Uncached memory";
     }
     return "Unsupported memory level";
 }
