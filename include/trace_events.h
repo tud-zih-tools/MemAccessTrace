@@ -22,23 +22,60 @@ enum class AccessType : uint32_t
     NA = PERF_MEM_OP_NA,
 };
 
+inline std::string
+toString(AccessType a)
+{
+    switch(a)
+    {
+        case AccessType::LOAD: return "Load";
+        case AccessType::STORE: return "Store";
+        case AccessType::PREFETCH: return "Prefetch";
+        case AccessType::EXEC: return "Exec";
+        case AccessType::NA: return "N/A";
+    }
+    return "Unsupported type";
+}
+
 enum class MemoryLevel : uint32_t
 {
     MEM_LVL_NA = PERF_MEM_LVL_NA, //         Not available
     MEM_LVL_HIT = PERF_MEM_LVL_HIT, //        Hit
     MEM_LVL_MISS = PERF_MEM_LVL_MISS, //       Miss
     MEM_LVL_L1 = PERF_MEM_LVL_L1, //         Level 1 cache
-    MEM_LVL_LFB = PERF_MEM_LVL_LFB, //        Line fill buffer
     MEM_LVL_L2 = PERF_MEM_LVL_L2, //         Level 2 cache
-    MEM_LVL_L3 = PERF_MEM_LVL_L2, //         Level 3 cache
+    MEM_LVL_L3 = PERF_MEM_LVL_L3, //         Level 3 cache
+    MEM_LVL_LFB = PERF_MEM_LVL_LFB, //        Line fill buffer
     MEM_LVL_LOC_RAM = PERF_MEM_LVL_LOC_RAM, //    Local DRAM
     MEM_LVL_REM_RAM1 = PERF_MEM_LVL_REM_RAM1, //   Remote DRAM 1 hop
     MEM_LVL_REM_RAM2 = PERF_MEM_LVL_REM_RAM2, //   Remote DRAM 2 hops
     MEM_LVL_REM_CCE1 = PERF_MEM_LVL_REM_CCE1, //   Remote cache 1 hop
-    MEM_LVL_REM_CCE2 = PERF_MEM_LVL_REM_CCE1, //   Remote cache 2 hops
+    MEM_LVL_REM_CCE2 = PERF_MEM_LVL_REM_CCE2, //   Remote cache 2 hops
     MEM_LVL_IO = PERF_MEM_LVL_IO, //         I/O memory
     MEM_LVL_UNC = PERF_MEM_LVL_UNC, //        Uncached memory
 };
+
+inline std::string
+toString(MemoryLevel ml)
+{
+    switch(ml)
+    {
+        case MemoryLevel::MEM_LVL_NA: return "N/A";
+        case MemoryLevel::MEM_LVL_HIT: return "Hit";
+        case MemoryLevel::MEM_LVL_MISS: return "Miss";
+        case MemoryLevel::MEM_LVL_L1: return "L1";
+        case MemoryLevel::MEM_LVL_L2: return "L2";
+        case MemoryLevel::MEM_LVL_L3: return "L3";
+        case MemoryLevel::MEM_LVL_LFB: return "Line Fill Buffer";
+        case MemoryLevel::MEM_LVL_LOC_RAM: return "Local DRAM";
+        case MemoryLevel::MEM_LVL_REM_RAM1: return "REM DRAM 1 hop";
+        case MemoryLevel::MEM_LVL_REM_RAM2: return "REM DRAM 2 hops";
+        case MemoryLevel::MEM_LVL_REM_CCE1: return "Remote cache 1 hop";
+        case MemoryLevel::MEM_LVL_REM_CCE2: return "Remote cache 2 hops";
+        case MemoryLevel::MEM_LVL_IO: return "I/O memory";
+        case MemoryLevel::MEM_LVL_UNC: return "Uncached memory";
+    }
+    return "Unsupported memory level";
+}
 
 struct AccessEvent
 {
