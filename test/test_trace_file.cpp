@@ -25,10 +25,12 @@ TEST_CASE ("tracefile::create")
 TEST_CASE ("tracefile::metadata::rw")
 {
     const char* p = "./foo";
-    TraceFile::TraceMetaData md_read;
-    TraceFile::TraceMetaData md_write;
-    md_write.access_count = 42;
-    md_write.tid = 1337;
+
+    auto tid = std::this_thread::get_id ();
+    EventBuffer eb(42);
+
+    TraceMetaData md_read;
+    TraceMetaData md_write(eb, tid);
     {
         TraceFile tf (p, TraceFileMode::WRITE);
         tf.write_meta_data (md_write);
@@ -37,8 +39,8 @@ TEST_CASE ("tracefile::metadata::rw")
         TraceFile tf (p, TraceFileMode::READ);
         tf.read_meta_data (&md_read);
     }
-    REQUIRE (md_write.tid == md_read.tid);
-    REQUIRE (md_write.access_count == md_read.access_count);
+    REQUIRE (md_write.thread_id() == md_read.thread_id());
+    REQUIRE (md_write.access_count() == md_read.access_count());
     REQUIRE (bf::remove (p));
 }
 
@@ -49,13 +51,13 @@ TEST_CASE ("tracefile::simple")
     AccessEvent ae2 (2, 0x2, 20, AccessType::LOAD, MemoryLevel::MEM_LVL_L2);
     EventBuffer eb (2);
 
-    eb.tid = std::this_thread::get_id ();
+    auto tid = std::this_thread::get_id ();
     eb.add (1, 0x1, 10, AccessType::STORE, MemoryLevel::MEM_LVL_L1);
     eb.add (2, 0x2, 20, AccessType::LOAD, MemoryLevel::MEM_LVL_L2);
 
     {
         TraceFile tf (p, TraceFileMode::WRITE);
-        tf.write (eb);
+        tf.write (eb, TraceMetaData(eb, tid));
     }
 
     TraceFile tf (p, TraceFileMode::READ);

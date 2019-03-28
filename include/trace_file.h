@@ -26,6 +26,34 @@ convert_thread_id (std::thread::id tid)
     return std::stoull (ss.str ());
 }
 
+struct TraceMetaData
+{
+    public:
+    TraceMetaData ()
+    {
+    }
+    explicit TraceMetaData (const EventBuffer& event_buffer, const std::thread::id& tid)
+    : access_count_ (event_buffer.size ()), tid_ (convert_thread_id (tid))
+    {
+    }
+
+    uint64_t
+    access_count () const
+    {
+        return access_count_;
+    }
+
+    uint64_t
+    thread_id () const
+    {
+        return tid_;
+    }
+
+    private:
+    uint64_t access_count_ = 0;
+    uint64_t tid_ = 0;
+};
+
 class TraceFile
 {
 
@@ -35,27 +63,12 @@ class TraceFile
     ~TraceFile ();
 
     void
-    write (const EventBuffer& event_buffer);
+    write (const EventBuffer& event_buffer, const TraceMetaData& meta_data);
 
     AccessSequence
     read ();
 
     private:
-    struct TraceMetaData
-    {
-        uint64_t access_count;
-        uint64_t tid;
-
-        TraceMetaData () : access_count (0), tid (0)
-        {
-        }
-
-        explicit TraceMetaData (const EventBuffer& event_buffer)
-        : access_count (event_buffer.size ()), tid (convert_thread_id (event_buffer.tid))
-        {
-        }
-    };
-
     void
     write_meta_data (const TraceMetaData& md);
 

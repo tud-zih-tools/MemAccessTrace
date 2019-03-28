@@ -97,9 +97,6 @@ operator<< (std::ostream& os, const AccessEvent& me);
 
 struct EventBuffer
 {
-
-    std::thread::id tid;
-
     inline uint64_t
     access_count () const
     {

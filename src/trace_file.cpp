@@ -32,27 +32,14 @@ TraceFile::~TraceFile ()
 }
 
 void
-TraceFile::write (const EventBuffer& event_buffer)
+TraceFile::write (const EventBuffer& event_buffer, const TraceMetaData& md)
 {
-    TraceMetaData md (event_buffer);
     write_meta_data (md);
 
     for (auto [pointer, size] : event_buffer.data ())
     {
         write_raw_data (pointer, size);
     }
-}
-
-AccessSequence
-TraceFile::read ()
-{
-    TraceMetaData md;
-    read_meta_data (&md);
-
-    AccessSequence as (md.access_count);
-    // TODO meta_data as parameter
-    read_raw_data (reinterpret_cast<char*> (as.data ()), sizeof (AccessEvent) * md.access_count);
-    return as;
 }
 
 void
@@ -66,6 +53,18 @@ void
 TraceFile::write_raw_data (const char* data, size_t nbytes)
 {
     file_.write (data, nbytes);
+}
+
+AccessSequence
+TraceFile::read ()
+{
+    TraceMetaData md;
+    read_meta_data (&md);
+
+    AccessSequence as (md.access_count());
+    // TODO meta_data as parameter
+    read_raw_data (reinterpret_cast<char*> (as.data ()), sizeof (AccessEvent) * md.access_count());
+    return as;
 }
 
 void
