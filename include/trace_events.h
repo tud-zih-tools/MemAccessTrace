@@ -137,9 +137,9 @@ struct EventBuffer
     }
 
     inline size_t
-    size () const
+    capacity () const
     {
-        return data_.size ();
+        return data_.capacity();
     }
 
     explicit EventBuffer (std::size_t size) : data_ (size)

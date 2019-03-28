@@ -33,7 +33,7 @@ struct TraceMetaData
     {
     }
     explicit TraceMetaData (const EventBuffer& event_buffer, const std::thread::id& tid)
-    : access_count_ (event_buffer.size ()), tid_ (convert_thread_id (tid))
+    : access_count_ (event_buffer.access_count ()), tid_ (convert_thread_id (tid))
     {
     }
 
