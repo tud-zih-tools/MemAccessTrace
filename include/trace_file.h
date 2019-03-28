@@ -37,6 +37,11 @@ struct TraceMetaData
     {
     }
 
+    explicit TraceMetaData (const EventBuffer& event_buffer, uint64_t tid)
+    : access_count_ (event_buffer.access_count ()), tid_ (tid)
+    {
+    }
+
     uint64_t
     access_count () const
     {

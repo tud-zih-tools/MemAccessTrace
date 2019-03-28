@@ -46,5 +46,12 @@ class TestEventBuffer(unittest.TestCase):
             self.assertEqual(a.type, e[3])
             self.assertEqual(a.level, e[4])
 
+    class TestTraceMetaData(unittest.TestCase):
+        def test_creation(self):
+            buffer = tf.EvenBuffer(42)
+            md = tf.TraceMetaData(buffer, 1337)
+            self.assertEqual(md.access_count(), 0)
+            self.assertEqual(md.thread_id(), 1337)
+
 if __name__ == '__main__':
     unittest.main()

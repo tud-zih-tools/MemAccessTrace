@@ -14,6 +14,10 @@ PYBIND11_MODULE (tracefile, m)
     "The module provides an API to write recorded memory accesses to a trace file."
     "tracefiles provides also classes for storing access events and their relevant information.";
 
+    py::enum_<TraceFileMode> (m, "TraceFileMode")
+    .value ("READ", TraceFileMode::READ)
+    .value ("WRITE", TraceFileMode::WRITE);
+
     py::enum_<AccessType> (m, "AccessType")
     .value ("LOAD", AccessType::LOAD)
     .value ("STORE", AccessType::STORE)
@@ -64,4 +68,11 @@ PYBIND11_MODULE (tracefile, m)
     .def ("__len__", &EventBuffer::access_count)
     .def ("__iter__", [](EventBuffer& eb) { return py::make_iterator (eb.begin (), eb.end ()); },
           py::keep_alive<0, 1> ());
+
+    py::class_<TraceMetaData>(m, "TraceMetaData")
+    .def(py::init<const EventBuffer&, uint64_t>())
+    .def("access_count", &TraceMetaData::access_count)
+    .def("thread_id", &TraceMetaData::thread_id);
+
+
 }
