@@ -2,6 +2,8 @@
 
 #include <boost/circular_buffer.hpp>
 #include <forward_list>
+#include <vector>
+
 #include <thread>
 
 extern "C"
@@ -11,7 +13,27 @@ extern "C"
 #include <unistd.h>
 }
 
+enum class AccessType : uint32_t;
+enum class MemoryLevel : uint32_t;
+struct AccessEvent;
+template <class Container> class EventBuffer;
+
 using PointerSizePair = std::tuple<const char*, uint64_t>;
+using EventVectorBuffer = EventBuffer<std::vector<AccessEvent>>;
+using EventRingBuffer = EventBuffer<boost::circular_buffer<AccessEvent>>;
+
+inline std::string toString (AccessType access_type);
+inline AccessType accessTypeFromString (const std::string& type);
+inline AccessType accessTypeFromPerf (uint64_t mem_op);
+
+inline std::string toString (MemoryLevel memory_level);
+inline MemoryLevel memoryLevelFromPerf (uint64_t mem_lvl);
+
+std::ostream& operator<< (std::ostream& os, const AccessEvent& access_event);
+
+/*****************************************************************************
+ * Access Types.
+ *****************************************************************************/
 
 enum class AccessType : uint32_t
 {
@@ -23,9 +45,9 @@ enum class AccessType : uint32_t
 };
 
 inline std::string
-toString (AccessType a)
+toString (AccessType access_type)
 {
-    switch (a)
+    switch (access_type)
     {
     case AccessType::LOAD:
         return "Load";
@@ -40,6 +62,39 @@ toString (AccessType a)
     }
     return "Unsupported type";
 }
+
+inline AccessType
+accessTypeFromString (const std::string& type)
+{
+    if (type.find ("Load") != std::string::npos)
+    {
+        return AccessType::LOAD;
+    }
+    else if (type.find ("Store") != std::string::npos)
+    {
+        return AccessType::STORE;
+    }
+    else if (type.find ("Prefetch") != std::string::npos)
+    {
+        return AccessType::PREFETCH;
+    }
+    else if (type.find ("Exec") != std::string::npos)
+    {
+        return AccessType::EXEC;
+    }
+
+    return AccessType::NA;
+}
+
+inline AccessType
+accessTypeFromPerf (uint64_t mem_op)
+{
+    return static_cast<AccessType> (mem_op);
+}
+
+/*****************************************************************************
+ * Memory Levels
+ *****************************************************************************/
 
 enum class MemoryLevel : uint32_t
 {
@@ -60,9 +115,9 @@ enum class MemoryLevel : uint32_t
 };
 
 inline std::string
-toString (MemoryLevel ml)
+toString (MemoryLevel memory_level)
 {
-    switch (ml)
+    switch (memory_level)
     {
     case MemoryLevel::MEM_LVL_NA:
         return "N/A";
@@ -96,6 +151,16 @@ toString (MemoryLevel ml)
     return "Unsupported memory level";
 }
 
+inline MemoryLevel
+memoryLevelFromPerf (uint64_t mem_lvl)
+{
+    return static_cast<MemoryLevel> (mem_lvl);
+}
+
+/*****************************************************************************
+ * Access Events
+ *****************************************************************************/
+
 struct AccessEvent
 {
     AccessEvent ()
@@ -105,124 +170,120 @@ struct AccessEvent
     : time (t), address (a), ip (i), access_type (at), memory_level (l)
     {
     }
-    uint64_t time = 0; // 8 Byte
-    uint64_t address = 0; // 8 Byte
-    uint64_t ip = 0; // 8 Byte --> unw_word_t
-    AccessType access_type = AccessType::NA; // 4 Byte
-    MemoryLevel memory_level = MemoryLevel::MEM_LVL_NA; // 4 Byte
+    uint64_t time = 0;
+    uint64_t address = 0;
+    uint64_t ip = 0;
+    AccessType access_type = AccessType::NA;
+    MemoryLevel memory_level = MemoryLevel::MEM_LVL_NA;
 };
-std::ostream&
-operator<< (std::ostream& os, const AccessEvent& me);
 
-struct EventBuffer
+inline std::ostream&
+operator<< (std::ostream& os, const AccessEvent& access_event)
 {
-    inline uint64_t
-    add_count () const
+    auto type = (access_event.access_type == AccessType::LOAD) ? "load" : "store";
+    os << "Address " << std::hex << access_event.address << std::dec << ", Time " << access_event.time << ", IP "
+       << std::hex << access_event.ip << std::dec << ", AccessType " << type;
+    return os;
+}
+
+/*****************************************************************************
+ * Event Buffer Interface
+ *****************************************************************************/
+
+template <class Container> class EventBuffer
+{
+    public:
+    using const_iterator = typename Container::const_iterator;
+    using iterator = typename Container::iterator;
+
+    EventBuffer () = default;
+    explicit EventBuffer (std::size_t size) : data_ (size)
     {
-        return add_count ();
+    }
+
+    inline uint64_t
+    size () const
+    {
+        return data_.size ();
     }
 
     inline uint64_t
     access_count () const
     {
-        return data_.size ();
+        return access_count_;
     }
 
     inline void
-    add (uint64_t timestamp, uint64_t address, uint64_t instruction_pointer, AccessType type, MemoryLevel level)
+    append (const AccessEvent& event)
     {
-        add_count_++;
-        data_.push_back (AccessEvent (timestamp, address, instruction_pointer, type, level));
-    }
-
-    inline void
-    add (const AccessEvent& event)
-    {
-        add_count_++;
+        access_count_++;
         data_.push_back (event);
     }
 
     inline std::forward_list<PointerSizePair>
-    data () const
+    data () const;
+
+    const_iterator
+    begin () const
     {
-        std::forward_list<PointerSizePair> list;
-        if (data_.array_two ().second > 0)
-        {
-            list.push_front (std::make_tuple (reinterpret_cast<const char*> (data_.array_two ().first),
-                                              data_.array_two ().second * sizeof (AccessEvent)));
-        }
-        list.push_front (std::make_tuple (reinterpret_cast<const char*> (data_.array_one ().first),
-                                          data_.array_one ().second * sizeof (AccessEvent)));
-        return list;
+        return data_.begin();
     }
 
-    inline auto
+    const_iterator
+    end () const
+    {
+        return data_.end();
+    }
+
+    iterator
     begin ()
     {
-        return data_.begin ();
+        return data_.begin();
     }
 
-    inline auto
+    iterator
     end ()
     {
-        return data_.end ();
-    }
-
-    inline size_t
-    capacity () const
-    {
-        return data_.capacity ();
-    }
-
-    explicit EventBuffer (std::size_t size) : data_ (size)
-    {
+        return data_.end();
     }
 
     private:
-    boost::circular_buffer<AccessEvent> data_;
-    uint64_t add_count_ = 0;
+    Container data_;
+    uint64_t access_count_ = 0;
 };
 
-inline std::ostream&
-operator<< (std::ostream& os, const AccessEvent& me)
+/*****************************************************************************
+ * Specialization for std::vector.
+ *****************************************************************************/
+template <>
+inline std::forward_list<PointerSizePair>
+EventVectorBuffer::data () const
 {
-    auto type = (me.access_type == AccessType::LOAD) ? "load" : "store";
-    os << "Address " << std::hex << me.address << std::dec << ", Time " << me.time << ", IP "
-       << std::hex << me.ip << std::dec << ", AccessType " << type;
-    return os;
+    return { { reinterpret_cast<const char*> (data_.data ()), data_.size () * sizeof (AccessEvent) } };
 }
 
-inline AccessType
-accessTypeFromString (const std::string& type)
+template <>
+inline uint64_t
+EventVectorBuffer::size () const
 {
-    if (type.find ("Load") != std::string::npos)
-    {
-        return AccessType::LOAD;
-    }
-    else if (type.find ("Store") != std::string::npos)
-    {
-        return AccessType::STORE;
-    }
-    else if (type.find ("Prefetch") != std::string::npos)
-    {
-        return AccessType::PREFETCH;
-    }
-    else if (type.find ("Exec") != std::string::npos)
-    {
-        return AccessType::EXEC;
-    }
-
-    return AccessType::NA;
+    return access_count_;
 }
 
-inline AccessType
-accessTypeFromPerf (uint64_t mem_op)
-{
-    return static_cast<AccessType> (mem_op);
-}
+/*****************************************************************************
+ * Specialization for boost::circular_buffer.
+ *****************************************************************************/
 
-inline MemoryLevel
-memoryLevelFromPerf (uint64_t mem_lvl)
+template <>
+inline std::forward_list<PointerSizePair>
+EventBuffer<boost::circular_buffer<AccessEvent>>::data () const
 {
-    return static_cast<MemoryLevel> (mem_lvl);
+    std::forward_list<PointerSizePair> list;
+    if (data_.array_two ().second > 0)
+    {
+        list.push_front (std::make_tuple (reinterpret_cast<const char*> (data_.array_two ().first),
+                                          data_.array_two ().second * sizeof (AccessEvent)));
+    }
+    list.push_front (std::make_tuple (reinterpret_cast<const char*> (data_.array_one ().first),
+                                      data_.array_one ().second * sizeof (AccessEvent)));
+    return list;
 }
