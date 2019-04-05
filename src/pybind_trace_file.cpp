@@ -79,7 +79,8 @@ PYBIND11_MODULE (tracefile, m)
     .def_readonly ("ip", &AccessEvent::ip)
     .def_readonly ("type", &AccessEvent::access_type)
     .def_readonly ("level", &AccessEvent::memory_level)
-    .def ("__str__", [](const AccessEvent& a) {
+    .def ("__str__", [](const AccessEvent& a)
+                     {
         std::stringstream ss;
         ss << "[Timestamp: " << a.time << ", "
            << "Address: " << std::hex << a.address << ", "
@@ -87,6 +88,11 @@ PYBIND11_MODULE (tracefile, m)
            << "Type: " << toString (a.access_type) << ", "
            << "Level: " << toString (a.memory_level) << "]";
         return ss.str ();
+                     })
+    .def ("__repr_", [](const AccessEvent& a)
+                     {
+                         py::object obj = py::cast(&a);
+                         return py::str(obj);
     });
 
     declare_event_buffer<EventVectorBuffer>(m, "EventVectorBuffer");
