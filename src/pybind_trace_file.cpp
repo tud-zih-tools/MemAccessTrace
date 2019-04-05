@@ -8,6 +8,35 @@
 
 namespace py = pybind11;
 
+template<class Container>
+void declare_event_buffer(py::module &m, const char * pyclass_name)
+{
+    py::class_<Container> (m, pyclass_name)
+    .def (py::init<> ())
+    .def (py::init<std::size_t> ())
+    .def ("append", py::overload_cast<const AccessEvent&> (&Container::append))
+    .def ("__len__", &Container::size)
+    .def ("__iter__", [](Container& eb)
+                      { return py::make_iterator (eb.begin (), eb.end ()); },
+                      py::keep_alive<0, 1> ())
+    .def ("__str__", [](const Container & buffer)
+                     {
+                        std::stringstream ss;
+                        ss << "[";
+                        for(const AccessEvent & e : buffer)
+                        {
+                            ss << e << ",";
+                        }
+                        ss << "]";
+                        return ss.str();
+                     })
+    .def ("__repr__", [](const Container & buffer)
+                      {
+                        py::object obj = py::cast(&buffer);
+                        return py::str(obj);
+                      });
+}
+
 PYBIND11_MODULE (tracefile, m)
 {
     m.doc () =
@@ -60,14 +89,8 @@ PYBIND11_MODULE (tracefile, m)
         return ss.str ();
     });
 
-    py::class_<EventBuffer> (m, "EventBuffer")
-    .def (py::init<std::size_t> ())
-    .def ("capacity", &EventBuffer::capacity)
-    .def ("append", py::overload_cast<uint64_t, uint64_t, uint64_t, AccessType, MemoryLevel> (&EventBuffer::add))
-    .def ("append", py::overload_cast<const AccessEvent&> (&EventBuffer::add))
-    .def ("__len__", &EventBuffer::access_count)
-    .def ("__iter__", [](EventBuffer& eb) { return py::make_iterator (eb.begin (), eb.end ()); },
-          py::keep_alive<0, 1> ());
+    declare_event_buffer<EventVectorBuffer>(m, "EventVectorBuffer");
+    declare_event_buffer<EventRingBuffer>(m, "EventRingBuffer");
 
     py::class_<TraceMetaData>(m, "TraceMetaData")
     .def(py::init<const EventBuffer&, uint64_t>())
