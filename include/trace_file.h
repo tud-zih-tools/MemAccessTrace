@@ -32,20 +32,23 @@ struct TraceMetaData
     TraceMetaData ()
     {
     }
-    explicit TraceMetaData (const EventBuffer& event_buffer, const std::thread::id& tid)
-    : access_count_ (event_buffer.access_count ()), tid_ (convert_thread_id (tid))
+
+    template <class T>
+    explicit TraceMetaData (const EventBuffer<T>& event_buffer, const std::thread::id& tid)
+    : size_ (event_buffer.size ()), tid_ (convert_thread_id (tid))
     {
     }
 
-    explicit TraceMetaData (const EventBuffer& event_buffer, uint64_t tid)
-    : access_count_ (event_buffer.access_count ()), tid_ (tid)
+    template <class T>
+    explicit TraceMetaData (const EventBuffer<T>& event_buffer, uint64_t tid)
+    : size_ (event_buffer.size ()), tid_ (tid)
     {
     }
 
     uint64_t
-    access_count () const
+    size () const
     {
-        return access_count_;
+        return size_;
     }
 
     uint64_t
@@ -55,7 +58,7 @@ struct TraceMetaData
     }
 
     private:
-    uint64_t access_count_ = 0;
+    uint64_t size_ = 0;
     uint64_t tid_ = 0;
 };
 

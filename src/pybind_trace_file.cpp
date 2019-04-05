@@ -93,9 +93,20 @@ PYBIND11_MODULE (tracefile, m)
     declare_event_buffer<EventRingBuffer>(m, "EventRingBuffer");
 
     py::class_<TraceMetaData>(m, "TraceMetaData")
-    .def(py::init<const EventBuffer&, uint64_t>())
-    .def("access_count", &TraceMetaData::access_count)
-    .def("thread_id", &TraceMetaData::thread_id);
-
-
+    .def(py::init<const EventRingBuffer&, uint64_t>())
+    .def(py::init<const EventVectorBuffer&, uint64_t>())
+    .def("size", &TraceMetaData::size)
+    .def("thread_id", &TraceMetaData::thread_id)
+    .def("__str__", [](const TraceMetaData & md)
+                    {
+                        std::stringstream ss;
+                        ss << "[ThreadId: " << md.thread_id() << ",";
+                        ss << " Size: " << md.size() << "]";
+                        return ss.str();
+                    })
+    .def("__repr__", [](const TraceMetaData & md)
+                     {
+                         py::object obj = py::cast(&md);
+                         return py::str(obj);
+                     });
 }
