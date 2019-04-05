@@ -26,6 +26,22 @@ convert_thread_id (std::thread::id tid)
     return std::stoull (ss.str ());
 }
 
+inline auto
+ios_open_mode (TraceFileMode mode)
+{
+    switch (mode)
+    {
+    case TraceFileMode::READ:
+        return std::ios::in;
+
+    case TraceFileMode::WRITE:
+        return std::ios::out;
+
+    default:
+        throw std::invalid_argument ("Unsupported open mode.");
+    }
+}
+
 struct TraceMetaData
 {
     public:
@@ -66,30 +82,90 @@ class TraceFile
 {
 
     public:
-    explicit TraceFile (const FilePath& file, TraceFileMode mode);
+    explicit TraceFile (const FilePath& file, TraceFileMode mode)
+    {
+        auto ios_mode = ios_open_mode (mode);
+        file_.open (file, ios_mode | std::ios::binary);
+    }
 
-    ~TraceFile ();
+    ~TraceFile ()
+    {
+        file_.close ();
+    }
 
+    template <class T>
     void
-    write (const EventBuffer& event_buffer, const TraceMetaData& meta_data);
+    write (const EventBuffer<T>& event_buffer, const TraceMetaData& md)
+    {
+        write_meta_data (md);
 
-    AccessSequence
+        for (auto [pointer, size] : event_buffer.data ())
+        {
+            write_raw_data (pointer, size);
+        }
+    }
+
+    inline AccessSequence
     read ();
 
     private:
-    void
+    inline void
     write_meta_data (const TraceMetaData& md);
 
-    void
+    inline void
     write_raw_data (const char* data, size_t nbytes);
 
-    void
+    inline void
     read_meta_data (TraceMetaData* md);
 
-    void
+    inline void
     read_raw_data (char* data, size_t nbytes);
 
     private:
     boost::filesystem::fstream file_;
     static constexpr std::string_view tag_ = "ATRACE";
 };
+
+void
+TraceFile::write_meta_data (const TraceMetaData& md)
+{
+    file_ << tag_;
+    file_.write ((char*)&md, sizeof (TraceMetaData));
+}
+
+void
+TraceFile::write_raw_data (const char* data, size_t nbytes)
+{
+    file_.write (data, nbytes);
+}
+
+AccessSequence
+TraceFile::read ()
+{
+    TraceMetaData md;
+    read_meta_data (&md);
+
+    AccessSequence as (md.size ());
+
+    read_raw_data (reinterpret_cast<char*> (as.data ()), sizeof (AccessEvent) * md.size ());
+    return as;
+}
+
+void
+TraceFile::read_meta_data (TraceMetaData* md)
+{
+    constexpr std::size_t tag_len = tag_.size ();
+    char tag_buffer[tag_len];
+    file_.read (tag_buffer, sizeof (char) * tag_len);
+    if (tag_ != tag_buffer)
+    {
+        throw std::runtime_error ("Trace does not contain the correct tag at the beginning.");
+    }
+    file_.read ((char*)md, sizeof (TraceMetaData));
+}
+
+void
+TraceFile::read_raw_data (char* data, size_t nbytes)
+{
+    file_.read (data, nbytes);
+}

@@ -11,14 +11,6 @@ set(TRACEFILE_PYTHON_SUPPORT PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND)
 
 add_subdirectory(test)
 
-add_library(trace_file
-            SHARED
-            src/trace_file.cpp)
-
-target_include_directories(trace_file PUBLIC include)
-
-target_compile_options(trace_file INTERFACE -Wall -Wextra)
-
 if(TRACEFILE_PYTHON_SUPPORT)
     add_subdirectory(pybind11)
 
@@ -31,7 +23,5 @@ if(TRACEFILE_PYTHON_SUPPORT)
 
     install(TARGETS tracefile DESTINATION "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages")
 endif(TRACEFILE_PYTHON_SUPPORT)
-
-install(TARGETS trace_file DESTINATION lib)
 
 install(FILES include/trace_events.h include/trace_file.h DESTINATION include)
