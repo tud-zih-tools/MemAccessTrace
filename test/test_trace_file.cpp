@@ -134,7 +134,7 @@ TEST_CASE ("tracefile::circular_buffer")
     }
 
     TraceFile tf (p, TraceFileMode::READ);
-    auto result = tf.read ();
+    auto result = tf.read<boost::circular_buffer<AccessEvent>> ();
 
     REQUIRE (result.size () == 2);
 
@@ -170,7 +170,7 @@ TEST_CASE ("tracefile::vector")
     }
 
     TraceFile tf (p, TraceFileMode::READ);
-    auto result = tf.read ();
+    auto result = tf.read<std::vector<AccessEvent>> ();
 
     REQUIRE (result.size () == 2);
 

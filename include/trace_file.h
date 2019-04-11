@@ -105,8 +105,21 @@ class TraceFile
         }
     }
 
-    inline AccessSequence
-    read ();
+    template <class T>
+    EventBuffer<T>
+    read ()
+    {
+        TraceMetaData md;
+        read_meta_data (&md);
+
+        EventBuffer<T> buffer (md.size ());
+        for (PointerSizePair data : buffer.data ())
+        {
+            read_raw_data (std::get<0> (data), std::get<1> (data));
+        }
+
+        return buffer;
+    }
 
     private:
     inline void
@@ -137,18 +150,6 @@ void
 TraceFile::write_raw_data (const char* data, size_t nbytes)
 {
     file_.write (data, nbytes);
-}
-
-AccessSequence
-TraceFile::read ()
-{
-    TraceMetaData md;
-    read_meta_data (&md);
-
-    AccessSequence as (md.size ());
-
-    read_raw_data (reinterpret_cast<char*> (as.data ()), sizeof (AccessEvent) * md.size ());
-    return as;
 }
 
 void
