@@ -18,7 +18,8 @@ enum class MemoryLevel : uint32_t;
 struct AccessEvent;
 template <class Container> class EventBuffer;
 
-using PointerSizePair = std::tuple<const char*, uint64_t>;
+using PointerSizePair = std::tuple<char*, uint64_t>;
+using ConstPointerSizePair = std::tuple<const char*, uint64_t>;
 using EventVectorBuffer = EventBuffer<std::vector<AccessEvent>>;
 using EventRingBuffer = EventBuffer<boost::circular_buffer<AccessEvent>>;
 
@@ -220,31 +221,46 @@ template <class Container> class EventBuffer
         data_.push_back (event);
     }
 
-    inline std::forward_list<PointerSizePair>
+    std::forward_list<PointerSizePair>
+    data ();
+
+    std::forward_list<ConstPointerSizePair>
     data () const;
 
-    const_iterator
+    inline const_iterator
     begin () const
     {
         return data_.begin();
     }
 
-    const_iterator
+    inline const_iterator
     end () const
     {
         return data_.end();
     }
 
-    iterator
+    inline iterator
     begin ()
     {
         return data_.begin();
     }
 
-    iterator
+    inline iterator
     end ()
     {
         return data_.end();
+    }
+
+    inline const AccessEvent &
+    operator[](size_t pos) const
+    {
+        return data_[pos];
+    }
+
+    inline AccessEvent &
+    operator[](size_t pos)
+    {
+        return data_[pos];
     }
 
     private:
@@ -256,7 +272,14 @@ template <class Container> class EventBuffer
  * Specialization for std::vector.
  *****************************************************************************/
 template <>
-inline std::forward_list<PointerSizePair>
+std::forward_list<PointerSizePair>
+EventVectorBuffer::data ()
+{
+    return { { reinterpret_cast<char*> (data_.data ()), data_.size () * sizeof (AccessEvent) } };
+}
+
+template <>
+std::forward_list<ConstPointerSizePair>
 EventVectorBuffer::data () const
 {
     return { { reinterpret_cast<const char*> (data_.data ()), data_.size () * sizeof (AccessEvent) } };
@@ -266,7 +289,7 @@ template <>
 inline uint64_t
 EventVectorBuffer::size () const
 {
-    return access_count_;
+    return data_.size();
 }
 
 /*****************************************************************************
@@ -274,10 +297,25 @@ EventVectorBuffer::size () const
  *****************************************************************************/
 
 template <>
-inline std::forward_list<PointerSizePair>
-EventBuffer<boost::circular_buffer<AccessEvent>>::data () const
+std::forward_list<PointerSizePair>
+EventBuffer<boost::circular_buffer<AccessEvent>>::data ()
 {
     std::forward_list<PointerSizePair> list;
+    if (data_.array_two ().second > 0)
+    {
+        list.push_front (std::make_tuple (reinterpret_cast<char*> (data_.array_two ().first),
+                                          data_.array_two ().second * sizeof (AccessEvent)));
+    }
+    list.push_front (std::make_tuple (reinterpret_cast<char*> (data_.array_one ().first),
+                                      data_.array_one ().second * sizeof (AccessEvent)));
+    return list;
+}
+
+template <>
+std::forward_list<ConstPointerSizePair>
+EventBuffer<boost::circular_buffer<AccessEvent>>::data () const
+{
+    std::forward_list<ConstPointerSizePair> list;
     if (data_.array_two ().second > 0)
     {
         list.push_front (std::make_tuple (reinterpret_cast<const char*> (data_.array_two ().first),
@@ -286,4 +324,11 @@ EventBuffer<boost::circular_buffer<AccessEvent>>::data () const
     list.push_front (std::make_tuple (reinterpret_cast<const char*> (data_.array_one ().first),
                                       data_.array_one ().second * sizeof (AccessEvent)));
     return list;
+}
+
+template <>
+inline uint64_t
+EventBuffer<boost::circular_buffer<AccessEvent>>::size() const
+{
+    return data_.capacity();
 }
