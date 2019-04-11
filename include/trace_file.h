@@ -139,6 +139,25 @@ class TraceFile
     static constexpr std::string_view tag_ = "ATRACE";
 };
 
+template <>
+EventBuffer<boost::circular_buffer<AccessEvent>>
+TraceFile::read ()
+{
+    TraceMetaData md;
+    read_meta_data (&md);
+
+    EventBuffer<boost::circular_buffer<AccessEvent>> buffer (md.size ());
+    std::unique_ptr<AccessEvent[]> data = std::make_unique<AccessEvent[]> (md.size ());
+    read_raw_data (reinterpret_cast<char*> (data.get ()), md.size () * sizeof(AccessEvent));
+
+    for(uint64_t i = 0; i < md.size(); i++)
+    {
+        buffer[i] = data.get()[i];
+    }
+
+    return buffer;
+}
+
 void
 TraceFile::write_meta_data (const TraceMetaData& md)
 {
