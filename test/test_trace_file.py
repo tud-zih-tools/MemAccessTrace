@@ -44,6 +44,38 @@ class TestEventBuffer(unittest.TestCase):
             self.assertEqual(a.type, e.type)
             self.assertEqual(a.level, e.level)
 
+    def test_get_item(self):
+        a1 = tf.AccessEvent(1, 1, 42, tf.AccessType.LOAD, tf.MemoryLevel.MEM_LVL_L1)
+        a2 = tf.AccessEvent(2, 2, 44, tf.AccessType.STORE, tf.MemoryLevel.MEM_LVL_L2)
+        buffer = tf.EventVectorBuffer()
+        buffer.append(a1)
+        buffer.append(a2)
+
+        self.assertEqual(len(buffer), 2)
+        self.assertEqual(a1.timestamp, buffer[0].timestamp)
+        self.assertEqual(a1.address, buffer[0].address)
+        self.assertEqual(a1.ip, buffer[0].ip)
+        self.assertEqual(a1.type, buffer[0].type)
+        self.assertEqual(a1.level, buffer[0].level)
+
+        self.assertEqual(a2.timestamp, buffer[1].timestamp)
+        self.assertEqual(a2.address, buffer[1].address)
+        self.assertEqual(a2.ip, buffer[1].ip)
+        self.assertEqual(a2.type, buffer[1].type)
+        self.assertEqual(a2.level, buffer[1].level)
+
+    def test_set_item(self):
+        a1 = tf.AccessEvent(1, 1, 42, tf.AccessType.LOAD, tf.MemoryLevel.MEM_LVL_L1)
+        a2 = tf.AccessEvent(2, 2, 44, tf.AccessType.STORE, tf.MemoryLevel.MEM_LVL_L2)
+        buffer = tf.EventVectorBuffer()
+        buffer.append(a1)
+        buffer[0] = a2
+        self.assertEqual(a2.timestamp, buffer[0].timestamp)
+        self.assertEqual(a2.address, buffer[0].address)
+        self.assertEqual(a2.ip, buffer[0].ip)
+        self.assertEqual(a2.type, buffer[0].type)
+        self.assertEqual(a2.level, buffer[0].level)
+
     class TestTraceMetaData(unittest.TestCase):
         def test_creation(self):
             buffer = tf.EventVectorBuffer()

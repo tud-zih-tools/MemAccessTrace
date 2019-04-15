@@ -34,6 +34,14 @@ void declare_event_buffer(py::module &m, const char * pyclass_name)
                       {
                         py::object obj = py::cast(&buffer);
                         return py::str(obj);
+                      })
+    .def("__getitem__", [](const Container & buffer, ssize_t index)
+                      {
+                        return buffer[index];
+                      })
+    .def("__setitem__", [](Container & buffer, ssize_t index, AccessEvent & access)
+                      {
+                        buffer[index] = access;
                       });
 }
 
