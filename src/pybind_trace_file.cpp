@@ -1,3 +1,4 @@
+#include <memory>
 #include <sstream>
 
 #include <pybind11/pybind11.h>
@@ -5,6 +6,9 @@
 
 #include <trace_events.h>
 #include <trace_file.h>
+
+// TODO Named arguments
+// TODO Provide = operator for event buffer
 
 namespace py = pybind11;
 
@@ -44,6 +48,47 @@ void declare_event_buffer(py::module &m, const char * pyclass_name)
                         buffer[index] = access;
                       });
 }
+
+class TraceFileWrapper
+{
+    public:
+
+    TraceFileWrapper(const std::string & path, TraceFileMode mode)
+    :path_(path),mode_(mode)
+    {}
+
+    inline void open()
+    {
+        trace_file_ = std::make_unique<TraceFile>(path_, mode_);
+    }
+
+    inline std::string path()
+    {
+        return path_;
+    }
+
+    template <class T>
+    inline void write(const EventBuffer<T>& event_buffer, const TraceMetaData& md)
+    {
+        trace_file_->write(event_buffer, md);
+    }
+
+    template <class T>
+    inline EventBuffer<T> read()
+    {
+        return trace_file_->read<T>();
+    }
+
+    inline void close()
+    {
+        trace_file_.reset(nullptr);
+    }
+
+    private:
+    std::string path_;
+    TraceFileMode mode_;
+    std::unique_ptr<TraceFile> trace_file_;
+};
 
 PYBIND11_MODULE (tracefile, m)
 {
@@ -123,4 +168,23 @@ PYBIND11_MODULE (tracefile, m)
                          py::object obj = py::cast(&md);
                          return py::str(obj);
                      });
+
+    py::class_<TraceFileWrapper>(m, "TraceFile")
+    .def(py::init<const std::string&, TraceFileMode>())
+    .def("__enter__", [](TraceFileWrapper & tf)
+                      {
+                          tf.open();
+                          return py::cast(&tf);
+                      })
+    .def("__exit__", [](TraceFileWrapper & tf, py::object exc_type,
+                        py::object exc_value, py::object traceback)
+                      {
+                          tf.close();
+                      })
+    .def("path", &TraceFileWrapper::path)
+    .def("write", py::overload_cast<const EventVectorBuffer&, const TraceMetaData&>(&TraceFileWrapper::write<std::vector<AccessEvent>>))
+    .def("write", py::overload_cast<const EventRingBuffer&, const TraceMetaData&>(&         TraceFileWrapper::write<boost::circular_buffer<AccessEvent>>))
+    .def("read", py::overload_cast<>(&TraceFileWrapper::read<std::vector<AccessEvent>>))
+    .def("read", py::overload_cast<>(&TraceFileWrapper::read<boost::circular_buffer<AccessEvent>>));
+
 }

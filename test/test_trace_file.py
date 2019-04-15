@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+import os.path
 import unittest
 import tracefile as tf
 
@@ -76,12 +77,48 @@ class TestEventBuffer(unittest.TestCase):
         self.assertEqual(a2.type, buffer[0].type)
         self.assertEqual(a2.level, buffer[0].level)
 
-    class TestTraceMetaData(unittest.TestCase):
-        def test_creation(self):
-            buffer = tf.EventVectorBuffer()
-            md = tf.TraceMetaData(buffer, 1337)
-            self.assertEqual(md.size(), 0)
-            self.assertEqual(md.thread_id(), 1337)
+class TestTraceMetaData(unittest.TestCase):
+    def test_creation(self):
+        buffer = tf.EventVectorBuffer()
+        md = tf.TraceMetaData(buffer, 1337)
+        self.assertEqual(md.size(), 0)
+        self.assertEqual(md.thread_id(), 1337)
+
+class TestTraceFile(unittest.TestCase):
+    def test_create(self):
+        path = "./foo.txt"
+        with tf.TraceFile(path, tf.TraceFileMode.WRITE) as file:
+            self.assertEqual(path, file.path())
+
+        self.assertTrue(os.path.isfile(path))
+        info = os.stat(path)
+        self.assertEqual(0, info.st_size)
+
+    def test_write_read(self):
+        path = "./foo.txt"
+        a1 = tf.AccessEvent(1, 1, 42, tf.AccessType.LOAD, tf.MemoryLevel.MEM_LVL_L1)
+        a2 = tf.AccessEvent(2, 2, 44, tf.AccessType.STORE, tf.MemoryLevel.MEM_LVL_L2)
+        write_buffer = tf.EventVectorBuffer()
+        write_buffer.append(a1)
+        write_buffer.append(a2)
+        md = tf.TraceMetaData(write_buffer, 100)
+        with tf.TraceFile(path, tf.TraceFileMode.WRITE) as file:
+            self.assertEqual(path, file.path())
+            file.write(write_buffer, md)
+
+        self.assertTrue(os.path.isfile(path))
+
+        with tf.TraceFile(path, tf.TraceFileMode.READ) as file:
+            self.assertEqual(path, file.path())
+            read_buffer = file.read()
+
+        for expect, current in zip(write_buffer, read_buffer):
+            self.assertEqual(expect.timestamp, current.timestamp)
+            self.assertEqual(expect.address, current.address)
+            self.assertEqual(expect.ip, current.ip)
+            self.assertEqual(expect.type, current.type)
+            self.assertEqual(expect.level, current.level)
+
 
 if __name__ == '__main__':
     unittest.main()
