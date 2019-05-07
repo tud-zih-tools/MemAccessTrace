@@ -51,7 +51,7 @@ struct TraceMetaData
 
     template <class T>
     explicit TraceMetaData (const EventBuffer<T>& event_buffer, const std::thread::id& tid)
-    : size_ (event_buffer.size ()), tid_ (convert_thread_id (tid))
+    : size_ (event_buffer.size ()), tid_ (convert_thread_id (tid)), access_count_(event_buffer.access_count())
     {
     }
 
@@ -73,9 +73,16 @@ struct TraceMetaData
         return tid_;
     }
 
+    uint64_t
+    access_count() const
+    {
+        return access_count_;
+    }
+
     private:
     uint64_t size_ = 0;
     uint64_t tid_ = 0;
+    uint64_t access_count_ = 0;
 };
 
 class TraceFile
