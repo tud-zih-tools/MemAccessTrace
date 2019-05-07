@@ -140,7 +140,7 @@ class TraceFile
 };
 
 template <>
-EventBuffer<boost::circular_buffer<AccessEvent>>
+inline EventBuffer<boost::circular_buffer<AccessEvent>>
 TraceFile::read ()
 {
     TraceMetaData md;
@@ -152,7 +152,7 @@ TraceFile::read ()
 
     for(uint64_t i = 0; i < md.size(); i++)
     {
-        buffer[i] = data.get()[i];
+        buffer.append(data.get () [i]);
     }
 
     return buffer;
