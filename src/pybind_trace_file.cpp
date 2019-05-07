@@ -74,7 +74,7 @@ class TraceFileWrapper
     }
 
     template <class T>
-    inline EventBuffer<T> read()
+    inline std::tuple<EventBuffer<T>, TraceMetaData> read()
     {
         return trace_file_->read<T>();
     }

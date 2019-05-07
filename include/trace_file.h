@@ -113,7 +113,7 @@ class TraceFile
     }
 
     template <class T>
-    EventBuffer<T>
+    std::tuple<EventBuffer<T>, TraceMetaData>
     read ()
     {
         TraceMetaData md;
@@ -125,7 +125,7 @@ class TraceFile
             read_raw_data (std::get<0> (data), std::get<1> (data));
         }
 
-        return buffer;
+        return {buffer, md};
     }
 
     private:
@@ -147,7 +147,7 @@ class TraceFile
 };
 
 template <>
-inline EventBuffer<boost::circular_buffer<AccessEvent>>
+inline std::tuple<EventBuffer<boost::circular_buffer<AccessEvent>>, TraceMetaData>
 TraceFile::read ()
 {
     TraceMetaData md;
@@ -162,7 +162,7 @@ TraceFile::read ()
         buffer.append(data.get () [i]);
     }
 
-    return buffer;
+    return {buffer, md};
 }
 
 void

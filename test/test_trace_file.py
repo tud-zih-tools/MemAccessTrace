@@ -110,7 +110,10 @@ class TestTraceFile(unittest.TestCase):
 
         with tf.TraceFile(path, tf.TraceFileMode.READ) as file:
             self.assertEqual(path, file.path())
-            read_buffer = file.read()
+            read_buffer, read_md = file.read()
+
+        self.assertEqual(md.size(), read_md.size())
+        self.assertEqual(md.thread_id(), read_md.thread_id())
 
         for expect, current in zip(write_buffer, read_buffer):
             self.assertEqual(expect.timestamp, current.timestamp)

@@ -126,15 +126,19 @@ TEST_CASE ("tracefile::circular_buffer")
     eb.append (ae1);
     eb.append (ae2);
 
+    auto md1 = TraceMetaData (eb, tid);
     REQUIRE (eb.size () == 2);
 
     {
         TraceFile tf (p, TraceFileMode::WRITE);
-        tf.write (eb, TraceMetaData (eb, tid));
+        tf.write (eb, md1);
     }
 
     TraceFile tf (p, TraceFileMode::READ);
-    auto result = tf.read<boost::circular_buffer<AccessEvent>> ();
+    auto [result, md2] = tf.read<boost::circular_buffer<AccessEvent>> ();
+
+    REQUIRE(md1.size() == md2.size());
+    REQUIRE(md1.thread_id() == md2.thread_id());
 
     REQUIRE (result.size () == 2);
 
@@ -164,13 +168,17 @@ TEST_CASE ("tracefile::vector")
     eb.append (ae1);
     eb.append (ae2);
 
+    auto md1 = TraceMetaData (eb, tid);
     {
         TraceFile tf (p, TraceFileMode::WRITE);
-        tf.write (eb, TraceMetaData (eb, tid));
+        tf.write (eb, md1);
     }
 
     TraceFile tf (p, TraceFileMode::READ);
-    auto result = tf.read<std::vector<AccessEvent>> ();
+    auto [result, md2] = tf.read<std::vector<AccessEvent>> ();
+
+    REQUIRE(md1.size() == md2.size());
+    REQUIRE(md1.thread_id() == md2.thread_id());
 
     REQUIRE (result.size () == 2);
 
