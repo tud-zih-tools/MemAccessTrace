@@ -272,14 +272,14 @@ template <class Container> class EventBuffer
  * Specialization for std::vector.
  *****************************************************************************/
 template <>
-std::forward_list<PointerSizePair>
+inline std::forward_list<PointerSizePair>
 EventVectorBuffer::data ()
 {
     return { { reinterpret_cast<char*> (data_.data ()), data_.size () * sizeof (AccessEvent) } };
 }
 
 template <>
-std::forward_list<ConstPointerSizePair>
+inline std::forward_list<ConstPointerSizePair>
 EventVectorBuffer::data () const
 {
     return { { reinterpret_cast<const char*> (data_.data ()), data_.size () * sizeof (AccessEvent) } };
@@ -297,7 +297,7 @@ EventVectorBuffer::size () const
  *****************************************************************************/
 
 template <>
-std::forward_list<PointerSizePair>
+inline std::forward_list<PointerSizePair>
 EventBuffer<boost::circular_buffer<AccessEvent>>::data ()
 {
     std::forward_list<PointerSizePair> list;
@@ -312,7 +312,7 @@ EventBuffer<boost::circular_buffer<AccessEvent>>::data ()
 }
 
 template <>
-std::forward_list<ConstPointerSizePair>
+inline std::forward_list<ConstPointerSizePair>
 EventBuffer<boost::circular_buffer<AccessEvent>>::data () const
 {
     std::forward_list<ConstPointerSizePair> list;
