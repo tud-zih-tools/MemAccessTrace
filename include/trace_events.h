@@ -330,5 +330,5 @@ template <>
 inline uint64_t
 EventBuffer<boost::circular_buffer<AccessEvent>>::size() const
 {
-    return data_.capacity();
+    return data_.size();
 }
