@@ -1,2 +1,7 @@
 .ccls-cache
 BUILD
+trace_file-cppcheck-build-dir
+trace_file.cppcheck
+.vscode/tasks.json
+.vscode/settings.json
+.vscode/tags
