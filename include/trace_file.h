@@ -182,9 +182,10 @@ void
 TraceFile::read_meta_data (TraceMetaData* md)
 {
     constexpr std::size_t tag_len = tag_.size ();
-    char tag_buffer[tag_len];
+    char tag_buffer[tag_len + 1];
     file_.read (tag_buffer, sizeof (char) * tag_len);
-    if (tag_ != tag_buffer)
+    tag_buffer[tag_len] = '\0';
+    if (tag_.compare(tag_buffer) != 0)
     {
         throw std::runtime_error ("Trace does not contain the correct tag at the beginning.");
     }
