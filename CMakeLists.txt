@@ -9,6 +9,8 @@ find_package(PythonLibs)
 
 set(TRACEFILE_PYTHON_SUPPORT PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND)
 
+find_package(Boost COMPONENTS filesystem system)
+
 add_subdirectory(test)
 
 if(TRACEFILE_PYTHON_SUPPORT)
@@ -16,8 +18,8 @@ if(TRACEFILE_PYTHON_SUPPORT)
 
     add_library(tracefile MODULE src/pybind_trace_file.cpp)
 
-    target_include_directories(tracefile PRIVATE include)
-    target_link_libraries(tracefile PRIVATE pybind11::module)
+    target_include_directories(tracefile PRIVATE include ${Boost_INCLUDE_DIRS})
+    target_link_libraries(tracefile PRIVATE pybind11::module ${Boost_LIBRARIES})
     set_target_properties(tracefile PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
                                                SUFFIX "${PYTHON_MODULE_EXTENSION}")
 
