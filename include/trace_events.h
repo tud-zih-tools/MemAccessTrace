@@ -90,7 +90,23 @@ accessTypeFromString (const std::string& type)
 inline AccessType
 accessTypeFromPerf (uint64_t mem_op)
 {
-    return static_cast<AccessType> (mem_op);
+    if(mem_op & PERF_MEM_OP_LOAD)
+    {
+        return AccessType::LOAD;
+    }
+    else if(mem_op & PERF_MEM_OP_STORE)
+    {
+        return AccessType::STORE;
+    }
+    else if(mem_op & PERF_MEM_OP_PFETCH)
+    {
+        return AccessType::PREFETCH;
+    }
+    else if(mem_op & PERF_MEM_OP_EXEC)
+    {
+        return AccessType::EXEC;
+    }
+    return AccessType::NA;
 }
 
 /*****************************************************************************
@@ -155,7 +171,55 @@ toString (MemoryLevel memory_level)
 inline MemoryLevel
 memoryLevelFromPerf (uint64_t mem_lvl)
 {
-    return static_cast<MemoryLevel> (mem_lvl);
+    if(mem_lvl & PERF_MEM_LVL_L1)
+    {
+        return MemoryLevel::MEM_LVL_L1;
+    }
+    else if(mem_lvl & PERF_MEM_LVL_LFB)
+    {
+        return MemoryLevel::MEM_LVL_LFB;
+    }
+    else if(mem_lvl & PERF_MEM_LVL_L2)
+    {
+        return MemoryLevel::MEM_LVL_L2;
+    }
+    else if(mem_lvl & PERF_MEM_LVL_L3)
+    {
+        return MemoryLevel::MEM_LVL_L3;
+    }
+    else if(mem_lvl & PERF_MEM_LVL_LOC_RAM)
+    {
+        return MemoryLevel::MEM_LVL_LOC_RAM;
+    }
+    else if(mem_lvl & PERF_MEM_LVL_REM_RAM1)
+    {
+        return MemoryLevel::MEM_LVL_REM_RAM1;
+    }
+    else if(mem_lvl & PERF_MEM_LVL_REM_RAM2)
+    {
+        return MemoryLevel::MEM_LVL_REM_RAM2;
+    }
+    else if(mem_lvl & PERF_MEM_LVL_REM_CCE1)
+    {
+        return MemoryLevel::MEM_LVL_REM_CCE1;
+    }
+    else if(mem_lvl & PERF_MEM_LVL_REM_CCE2)
+    {
+        return MemoryLevel::MEM_LVL_REM_CCE2;
+    }
+    else if(mem_lvl & PERF_MEM_LVL_IO)
+    {
+        return MemoryLevel::MEM_LVL_IO;
+    }
+    else if(mem_lvl & PERF_MEM_LVL_UNC)
+    {
+        return MemoryLevel::MEM_LVL_UNC;
+    }
+    else if(mem_lvl & PERF_MEM_LVL_NA)
+    {
+        return MemoryLevel::MEM_LVL_NA;
+    }
+    return MemoryLevel::MEM_LVL_NA;
 }
 
 /*****************************************************************************
