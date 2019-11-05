@@ -5,6 +5,7 @@ It provides an interface for writing and reading traces.
 Currently, *Trace File* intends to create one trace per thread. 
 
 *Trace File* also provides a Python interface for reading and writing trace files.
+Take a look in the examples to see how trace files can be analyzed with Python.
 
 This software was developed as part of the EC H2020 funded project NEXTGenIO (Project ID: 671951) http://www.nextgenio.eu.
 
